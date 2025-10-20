@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.boshuo.sjzgl.mapper.GameGuideMapper">
+
+    <!-- 基础结果映射 -->
+    <resultMap id="BaseResultMap" type="com.boshuo.sjzgl.model.entity.GameGuide">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="cover_image" property="coverImage"/>
+        <result column="video_url" property="videoUrl"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="like_count" property="likeCount"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+   <!-- 包含分 类信息的详细结果映射 -->
+    <resultMap id="GameGuideDetailMap" type="com.boshuo.sjzgl.model.entity.GameGuide" extends="BaseResultMap">
+        <association property="category" javaType="com.boshuo.sjzgl.model.entity.GameCategory">
+            <id column="category_id" property="id"/>
+            <result column="category_name" property="name"/>
+            <result column="category_status" property="status"/>
+        </association>
+    </resultMap>
+
+    <!-- 基础列 -->
+    <sql id="Base_Column_List">
+        id, title, content, category_id, cover_image, video_url,
+        view_count, like_count, status, created_at, updated_at
+    </sql>
+
+    <!-- 插入攻略 -->
+    <insert id="insert" parameterType="com.boshuo.sjzgl.model.entity.GameGuide" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO game_guides (
+            title, content, category_id, cover_image, video_url,
+            view_count, like_count, status, created_at, updated_at
+        ) VALUES (
+                     #{title}, #{content}, #{categoryId}, #{coverImage}, #{videoUrl},   
+                     #{viewCount}, #{likeCount}, #{status}, #{createdAt}, #{updatedAt}
+                 )
+    </insert>
+
+    <!-- 更新攻略 -->
+    <update id="update" parameterType="com.boshuo.sjzgl.model.entity.GameGuide">
+        UPDATE game_guides
+        <set>
+            <if test="title != null">title = #{title},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="coverImage != null">cover_image = #{coverImage},</if>
+            <if test="videoUrl != null">video_url = #{videoUrl},</if>
+            <if test="viewCount != null">view_count = #{viewCount},</if>
+            <if test="likeCount != null">like_count = #{likeCount},</if>
+            <if test="status != null">status = #{status},</if>
+            updated_at = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除 -->
+    <delete id="deleteById">
+        DELETE FROM game_guides WHERE id = #{id}
+    </delete>
+
+    <!-- 根据ID查询（包含分类信息） -->
+    <select id="selectById" resultMap="GameGuideDetailMap">
+        SELECT
+            g.*,
+            c.name as category_name,
+            c.status as category_status
+        FROM game_guides g
+                 LEFT JOIN game_categories c ON g.category_id = c.id
+        WHERE g.id = #{id}
+    </select>
+
+    <!-- 条件查询攻略列表 -->
+    <select id="selectByCondition" resultMap="GameGuideDetailMap" parameterType="com.boshuo.sjzgl.model.dto.GuideQueryDTO">
+        SELECT
+        g.*,
+        c.name as category_name,
+        c.status as category_status
+        FROM game_guides g
+        LEFT JOIN game_categories c ON g.category_id = c.id
+        <where>
+            g.status = 'A'
+            <if test="keyword != null and keyword != ''">
+                AND (g.title LIKE CONCAT('%', #{keyword}, '%')
+                OR g.content LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="categoryId != null">
+                AND g.category_id = #{categoryId}
+            </if>
+        </where>
+        ORDER BY
+        <choose>
+            <when test="sortBy == 'view'">g.view_count DESC</when>
+            <when test="sortBy == 'like'">g.like_count DESC</when>
+            <when test="sortBy == 'update'">g.updated_at DESC</when>
+            <otherwise>g.created_at DESC</otherwise>
+        </choose>
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <!-- 统计条件查询数量 -->
+    <select id="countByCondition" resultType="int" parameterType="com.boshuo.sjzgl.model.dto.GuideQueryDTO">
+        SELECT COUNT(*)
+        FROM game_guides g
+        <where>
+            g.status = 'A'
+            <if test="keyword != null and keyword != ''">
+                AND (g.title LIKE CONCAT('%', #{keyword}, '%')
+                OR g.content LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="categoryId != null">
+                AND g.category_id = #{categoryId}
+            </if>
+        </where>
+    </select>
+
+    <!-- 增加浏览量 -->
+    <update id="incrementViewCount">
+        UPDATE game_guides SET view_count = view_count + 1 WHERE id = #{id}
+    </update>
+
+    <!-- 增加点赞数 -->
+    <update id="incrementLikeCount">
+        UPDATE game_guides SET like_count = like_count + 1 WHERE id = #{id}
+    </update>
+
+    <!-- 查询热门攻略（按浏览量） -->
+    <select id="selectHotGuides" resultMap="GameGuideDetailMap">
+        SELECT
+            g.*,
+            c.name as category_name
+        FROM game_guides g
+                 LEFT JOIN game_categories c ON g.category_id = c.id
+        WHERE g.status = 'A'
+        ORDER BY g.view_count DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 查询最新攻略 -->
+    <select id="selectLatestGuides" resultMap="GameGuideDetailMap">
+        SELECT
+            g.*,
+            c.name as category_name
+        FROM game_guides g
+                 LEFT JOIN game_categories c ON g.category_id = c.id
+        WHERE g.status = 'A'
+        ORDER BY g.created_at DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 统计攻略总数 -->
+    <select id="countTotalGuides" resultType="long">
+        SELECT COUNT(*) FROM game_guides WHERE status = 'A'
+    </select>
+
+    <!-- 统计总浏览量 -->
+    <select id="sumTotalViews" resultType="long">
+        SELECT COALESCE(SUM(view_count), 0) FROM game_guides WHERE status = 'A' 
+    </select>
+
+</mapper>

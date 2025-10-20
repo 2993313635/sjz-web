@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.boshuo.sjzgl.mapper.GameNewMapper">
+
+    <resultMap id="BaseResultMap" type="com.boshuo.sjzgl.model.entity.GameNew">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="summary" property="summary"/>
+        <result column="content" property="content"/>
+        <result column="cover_image" property="coverImage"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, title, summary, content, cover_image, created_at
+    </sql>
+
+    <!-- 插入资讯 -->
+    <insert id="insert" parameterType="com.boshuo.sjzgl.model.entity.GameNew" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO game_news (title, summary, content, cover_image, created_at)
+        VALUES (#{title}, #{summary}, #{content}, #{coverImage}, #{createdAt})
+    </insert>
+
+    <!-- 更新资讯 -->
+    <update id="update" parameterType="com.boshuo.sjzgl.model.entity.GameNew">
+        UPDATE game_news
+        <set>
+            <if test="title != null">title = #{title},</if>
+            <if test="summary != null">summary = #{summary},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="coverImage != null">cover_image = #{coverImage},</if>
+            updated_at = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除 -->
+    <delete id="deleteById">
+        DELETE FROM game_news WHERE id = #{id}
+    </delete>
+
+    <!-- 根据ID查询 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM game_news
+        WHERE id = #{id}
+    </select>
+
+    <!-- 条件查询资讯列表 -->
+    <select id="selectByCondition" resultMap="BaseResultMap" parameterType="com.boshuo.sjzgl.model.dto.NewQueryDTO">
+        SELECT <include refid="Base_Column_List"/>
+        FROM game_news
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (title LIKE CONCAT('%', #{keyword}, '%')
+                OR content LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY created_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <!-- 统计条件查询数量 -->
+    <select id="countByCondition" resultType="Integer" parameterType="com.boshuo.sjzgl.model.dto.NewQueryDTO">
+        SELECT COUNT(*)
+        FROM game_news
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (title LIKE CONCAT('%', #{keyword}, '%')
+                OR content LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+    </select>
+
+    <!-- 查询最新资讯 -->
+    <select id="selectLatestNews" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM game_news
+        ORDER BY created_at DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="countTotalNews" resultType="long">
+        SELECT COUNT(*) FROM game_news
+    </select>
+
+</mapper>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.boshuo.sjzgl.mapper.BannerMapper">
+
+    <resultMap id="BaseResultMap" type="com.boshuo.sjzgl.model.entity.Banner">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="image_url" property="imageUrl"/>
+        <result column="link_url" property="linkUrl"/>
+        <result column="sort_order" property="sortOrder"/>
+        <result column="is_active" property="isActive"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, title, image_url, link_url,sort_order, is_active
+    </sql>
+
+    <!-- 插入Banner -->
+    <insert id="insert" parameterType="com.boshuo.sjzgl.model.entity.Banner" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO banners (title, image_url, link_url,sort_order, is_active)
+        VALUES (#{title}, #{imageUrl}, #{linkUrl},#{sortOrder}, #{isActive})
+    </insert>
+
+    <!-- 更新Banner -->
+    <update id="update" parameterType="com.boshuo.sjzgl.model.entity.Banner">
+        UPDATE banners
+        <set>
+            <if test="title != null">title = #{title},</if>
+            <if test="imageUrl != null">image_url = #{imageUrl},</if>
+            <if test="linkUrl != null">link_url = #{linkUrl},</if>
+            <if test="sortOrder != null">sort_order = #{sortOrder},</if>
+            <if test="isActive != null">is_active = #{isActive},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除 -->
+    <delete id="deleteById">
+        DELETE FROM banners WHERE id = #{id}
+    </delete>
+
+    <!-- 根据ID查询 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM banners
+        WHERE id = #{id}
+    </select>
+
+    <!-- 查询激活的Banner -->
+    <select id="selectActiveBanners" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM banners
+        WHERE is_active = 1
+        ORDER BY id DESC
+    </select>
+
+        <!-- 查询所有Banner -->
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM banners
+        ORDER BY id DESC
+    </select>
+
+
+
+    <!-- 更新Banner状态 -->
+    <update id="updateStatus">
+        UPDATE banners SET is_active = #{isActive} WHERE id = #{id}
+    </update>
+
+</mapper>

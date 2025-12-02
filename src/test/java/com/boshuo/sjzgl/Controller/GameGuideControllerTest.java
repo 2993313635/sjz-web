@@ -1,7 +1,6 @@
 package com.boshuo.sjzgl.Controller;
 
 import com.boshuo.sjzgl.controller.GameGuideController;
-import com.boshuo.sjzgl.model.dto.ApiResponse;
 import com.boshuo.sjzgl.model.dto.CreateGuideDTO;
 import com.boshuo.sjzgl.model.dto.UpdateGuideDTO;
 import com.boshuo.sjzgl.model.entity.GameGuide;
@@ -17,7 +16,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;

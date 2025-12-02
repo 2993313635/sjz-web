@@ -27,6 +27,6 @@ public class PageResult<T> {
 
     //静态工厂方法
     public static <T> PageResult<T> of(List<T> list, int total, int page, int size) {
-        return new PageResult(list, total, page, size);
+        return new PageResult<>(list, total, page, size);
     }
 }
